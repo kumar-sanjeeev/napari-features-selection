@@ -2,47 +2,54 @@ name: napari-features-selection
 display_name: Features Selection
 contributions:
   commands:
-    - id: napari-features-selection.get_reader
-      python_name: napari_features_selection._reader:napari_get_reader
-      title: Open data with Features Selection
-    - id: napari-features-selection.write_multiple
-      python_name: napari_features_selection._writer:write_multiple
-      title: Save multi-layer data with Features Selection
-    - id: napari-features-selection.write_single_image
-      python_name: napari_features_selection._writer:write_single_image
-      title: Save image data with Features Selection
-    - id: napari-features-selection.make_sample_data
-      python_name: napari_features_selection._sample_data:make_sample_data
-      title: Load sample data from Features Selection
+    # - id: napari-features-selection.get_reader
+    #   python_name: napari_features_selection._reader:napari_get_reader
+    #   title: Open data with Features Selection
+
+    # - id: napari-features-selection.write_multiple
+    #   python_name: napari_features_selection._writer:write_multiple
+    #   title: Save multi-layer data with Features Selection
+
+    # - id: napari-features-selection.write_single_image
+    #   python_name: napari_features_selection._writer:write_single_image
+    #   title: Save image data with Features Selection
+
+    # - id: napari-features-selection.make_sample_data
+    #   python_name: napari_features_selection._sample_data:make_sample_data
+    #   title: Load sample data from Features Selection
+
     - id: napari-features-selection.make_qwidget
-      python_name: napari_features_selection._widget:ExampleQWidget
-      title: Make example QWidget
-    - id: napari-features-selection.make_magic_widget
-      python_name: napari_features_selection._widget:example_magic_widget
-      title: Make example magic widget
-    - id: napari-features-selection.make_func_widget
-      python_name: napari_features_selection._widget:example_function_widget
-      title: Make example function widget
-  readers:
-    - command: napari-features-selection.get_reader
-      accepts_directories: false
-      filename_patterns: ['*.npy']
-  writers:
-    - command: napari-features-selection.write_multiple
-      layer_types: ['image*','labels*']
-      filename_extensions: []
-    - command: napari-features-selection.write_single_image
-      layer_types: ['image']
-      filename_extensions: ['.npy']
-  sample_data:
-    - command: napari-features-selection.make_sample_data
-      display_name: Features Selection
-      key: unique_id.1
+      python_name: napari_features_selection._widget:FeaturesSelection
+      title: Features selection Widget
+
+    # - id: napari-features-selection.make_magic_widget
+    #   python_name: napari_features_selection._widget:example_magic_widget
+    #   title: Make example magic widget
+
+    # - id: napari-features-selection.make_func_widget
+    #   python_name: napari_features_selection._widget:example_function_widget
+    #   title: Make example function widget
+
+  # readers:
+  #   - command: napari-features-selection.get_reader
+  #     accepts_directories: false
+  #     filename_patterns: ['*.npy']
+  # writers:
+  #   - command: napari-features-selection.write_multiple
+  #     layer_types: ['image*','labels*']
+  #     filename_extensions: []
+  #   - command: napari-features-selection.write_single_image
+  #     layer_types: ['image']
+  #     filename_extensions: ['.npy']
+  # sample_data:
+  #   - command: napari-features-selection.make_sample_data
+  #     display_name: Features Selection
+  #     key: unique_id.1
   widgets:
     - command: napari-features-selection.make_qwidget
-      display_name: Example QWidget
-    - command: napari-features-selection.make_magic_widget
-      display_name: Example Magic Widget
-    - command: napari-features-selection.make_func_widget
-      autogenerate: true
-      display_name: Example Function Widget
+      display_name: Features Selections
+    # - command: napari-features-selection.make_magic_widget
+    #   display_name: Example Magic Widget
+    # - command: napari-features-selection.make_func_widget
+    #   autogenerate: true
+    #   display_name: Example Function Widget
