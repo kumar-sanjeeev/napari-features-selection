@@ -86,10 +86,6 @@ class FeaturesSelection(QWidget):
 def example_magic_widget(img_layer: "napari.layers.Image"):
     pass
 
-   
-
-
-
 """
 IMPROVED GUI VERSION
 """
@@ -112,8 +108,6 @@ def _init_classifier(widget):
         except IOError:
             return [""]
         
-
-
     widget.feature_selection._default_choices = get_feature_choices
 
     @widget.feature_path.changed.connect
@@ -127,17 +121,6 @@ def _init_classifier(widget):
 
 
 @magic_factory(
-    feature_path={"label": "File Path:", "filter": "*.csv"},
-    feature_selection={
-        "choices": [""],
-        "allow_multiple": True,
-        "label": "Input Features:",
-    },
-    widget_init=_init_classifier,
-    call_button="Run Feature Selection"
-)
-def initialize_classifier(
-    viewer: Viewer,
-    feature_path: Path,
-    feature_selection=[""],
-): pass
+    feature_path={"label": "File Path:", "filter": "*.csv"},feature_selection={"choices": [""],"allow_multiple": True,"label": "Input Features:",},widget_init=_init_classifier,call_button="Run Feature Selection")
+def initialize_classifier(viewer: Viewer,feature_path: Path,feature_selection=[""],):
+    pass
