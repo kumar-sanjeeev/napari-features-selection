@@ -5,6 +5,7 @@ see: https://napari.org/stable/plugins/guides.html?#widgets
 Replace code below according to your needs.
 """
 from random import choices
+from symbol import pass_stmt
 import warnings
 import numpy as np
 import pandas as pd
@@ -25,6 +26,7 @@ from napari import Viewer
 from pathlib import Path
 
 from magicgui.widgets import Table
+from magicgui.widgets import Slider
 
 if TYPE_CHECKING:
     import napari
@@ -200,19 +202,29 @@ def initialize_classifier(viewer: Viewer,file_path: Path,feature_selection=[""],
 
 
 
-## adding table view widget
+# adding table view widget
 
-# temp_data = pd.DataFrame({'a':["Sanjeev", "sanju", "kumar"],
-#                      'b':[100,200,300],
-#                      'c':['a','b','c']})
+# temp_data = pd.DataFrame({'a':["Sanjeev", "sanju"],
+#                      'b':[100,200],
+#                      'c':['a','b']})
 
-# d = temp_data.to_dict()
-
-
-# @magic_factory(table = {"value": d})
-# def table_view(table: Table):
-#     print("button pressed")
-#     pass
+# d = temp_data.to_dict(orient='list')
 
 
+dict_of_lists = {"col_1": [1, 4], "col_2": [2, 5], "col_3": [3, 6]}
 
+
+def _init_table_view(widget):
+    print("Select Table View widget")
+
+    widget.table.value = dict_of_lists
+    print(widget.table.row_headers)
+    print(widget.table.column_headers)
+    widget.table.column_headers = ("a","b","c")
+    print(widget.table.column_headers)
+
+
+@magic_factory(table = {"widget_type": Table, "value":None,"label":"Dataframe"}, widget_init=_init_table_view,)
+def table_view(table):
+    print(table)
+    pass

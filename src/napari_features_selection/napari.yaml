@@ -32,9 +32,9 @@ contributions:
       title: Save File
 
     # sep 27
-    # - id: napari-features-selection.make_qwidget3
-    #   python_name: napari_features_selection._widget:table_view
-    #   title: Table View
+    - id: napari-features-selection.make_qwidget3
+      python_name: napari_features_selection._widget:table_view
+      title: Table View
 
     # - id: napari-features-selection.please
     #   python_name: napari_features_selection._widget:main_algo
@@ -70,8 +70,8 @@ contributions:
       display_name: Features Selections GUI V3
 
 
-    # - command: napari-features-selection.make_qwidget3
-    #   display_name: Table View
+    - command: napari-features-selection.make_qwidget3
+      display_name: Table View
 
 
     # - command: napari-features-selection.main_algo
