@@ -1,4 +1,3 @@
-
 """
 This module is an example of a barebones QWidget plugin for napari
 It implements the Widget specification.
@@ -14,6 +13,8 @@ from typing import TYPE_CHECKING
 from magicgui import magic_factory
 from qtpy.QtWidgets import QHBoxLayout, QPushButton, QWidget, QLabel, QVBoxLayout, QFileDialog
 
+from napari.utils.notifications import show_info
+
 import os
 import pandas as pd
 #imports for file selection
@@ -22,6 +23,8 @@ import pandas as pd
 
 from napari import Viewer
 from pathlib import Path
+
+from magicgui.widgets import Table
 
 if TYPE_CHECKING:
     import napari
@@ -81,10 +84,61 @@ class FeaturesSelection(QWidget):
         df = pd.read_csv(path)
         print(df)
 
+
+
+
+#### working on saving the output file options
+
+class SaveFile(QWidget):
+    # your QWidget.__init__ can optionally request the napari viewer instance
+    # in one of two ways:
+    # 1. use a parameter called `napari_viewer`, as done here
+    # 2. use a type annotation of 'napari.viewer.Viewer' for any parameter
+    def __init__(self, napari_viewer):
+        super().__init__()
+
+        self.viewer = napari_viewer
+        self.create_layout()
+
+    
+    def create_layout(self):
+        
+        self.worker = None
+        self.setLayout(QVBoxLayout())
+        #for title 
+        title_container = QWidget()
+        title_container.setLayout(QVBoxLayout())
+        title_container.layout().addWidget(QLabel("<b>Save Output CSV File</b>"))
+
+        #for path selection widget and buttons
+        btn1 = QPushButton("Select Directory")
+        btn1.clicked.connect(self.path_selection)
+
+        path_selection_container = QWidget()
+        path_selection_container.setLayout(QHBoxLayout())
+
+        path_selection_container.layout().addWidget(QLabel(" Output File Path"))
+        path_selection_container.layout().addWidget(btn1)
+        self.layout().addWidget(title_container)
+        self.layout().addWidget(path_selection_container)
+    
+    def path_selection(self):
+        file_filter = '*.txt'
+        file_path = QFileDialog.getSaveFileName(parent=self, caption='Save a csv File', directory=os.getcwd(), filter=file_filter)
+        print("Printing the selected output file path: ",file_path[0])
+
+        with open(file_path[0], 'w') as f:
+            content = "Successful implemented the output path selection feature"
+            f.write(content)
+    
+
+
 #need to find out its utility
 @magic_factory
 def example_magic_widget(img_layer: "napari.layers.Image"):
     pass
+
+
 
 """
 IMPROVED GUI VERSION
@@ -96,31 +150,69 @@ def _init_classifier(widget):
     ----------
     widget: napari widget
     """
-    print("This will run whenever I will select the widget from plugin window")
+    print("User Selected the GUI version 2.0")
 
     def get_feature_choices(*args):
         """
         Function loading the column names of the widget dataframe
         """
         try:
-            dataframe = pd.read_csv(widget.feature_path.value)
+            dataframe = pd.read_csv(widget.file_path.value)
             return list(dataframe.columns)
         except IOError:
             return [""]
         
     widget.feature_selection._default_choices = get_feature_choices
+    widget.target_variable._default_choices = get_feature_choices
 
-    @widget.feature_path.changed.connect
+    """
+    # Updating the file path when it changes in GUI
+    # Updating the deafult value of feature_selection
+    # Updating the deafult value of the target_variable
+    """
+    @widget.file_path.changed.connect
     def update_df_columns():
-        """
-        Handles updating of dropdown options and setting defaults
-        """
         # ...reset_choices() calls the "get_feature_choices" function above
         # to keep them updated with the current dataframe
         widget.feature_selection.reset_choices()
+        widget.target_variable.reset_choices()
+        show_info(f"Selected Path: {widget.file_path.value}")
+    
+    """
+    # Updating the target_varible value when it changes in GUI
+    """
+    @widget.target_variable.changed.connect
+    def update_target_variable():
+        target_variable = widget.target_variable.value
+        
+
 
 
 @magic_factory(
-    feature_path={"label": "File Path:", "filter": "*.csv"},feature_selection={"choices": [""],"allow_multiple": True,"label": "Input Features:",},widget_init=_init_classifier,call_button="Run Feature Selection")
-def initialize_classifier(viewer: Viewer,feature_path: Path,feature_selection=[""],):
-    pass
+    file_path={"label": "File Path:", "filter": "*.csv"},
+    feature_selection={"choices": [""],"allow_multiple": True,"label": "Input Features:",},
+    target_variable= {"choices":[""], "label": "Target Variable"},
+    widget_init=_init_classifier,call_button="Print GUI selected parameters",)
+def initialize_classifier(viewer: Viewer,file_path: Path,feature_selection=[""], target_variable = "",):
+    print('----Current selected parameter varible----')
+    print("File Path:" ,file_path)
+    print("Target variable: ", target_variable)
+
+
+
+## adding table view widget
+
+# temp_data = pd.DataFrame({'a':["Sanjeev", "sanju", "kumar"],
+#                      'b':[100,200,300],
+#                      'c':['a','b','c']})
+
+# d = temp_data.to_dict()
+
+
+# @magic_factory(table = {"value": d})
+# def table_view(table: Table):
+#     print("button pressed")
+#     pass
+
+
+

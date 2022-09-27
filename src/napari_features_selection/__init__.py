@@ -2,7 +2,7 @@ __version__ = "0.0.1"
 
 from ._reader import napari_get_reader
 from ._sample_data import make_sample_data
-from ._widget import example_magic_widget, FeaturesSelection, initialize_classifier
+from ._widget import example_magic_widget, FeaturesSelection, initialize_classifier, SaveFile
 from ._writer import write_multiple, write_single_image
 
 __all__ = (
@@ -13,4 +13,5 @@ __all__ = (
     "FeaturesSelection",
     "example_magic_widget",
     "initialize_classifier",
+    "SaveFile",
 )
