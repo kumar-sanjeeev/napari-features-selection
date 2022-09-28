@@ -4,12 +4,10 @@ It implements the Widget specification.
 see: https://napari.org/stable/plugins/guides.html?#widgets
 Replace code below according to your needs.
 """
-from random import choices
-from symbol import pass_stmt
+
 import warnings
 import numpy as np
 import pandas as pd
-# from magicgui.widgets import create_widget
 from typing import TYPE_CHECKING
 from magicgui import magic_factory
 from qtpy.QtWidgets import QHBoxLayout, QPushButton, QWidget, QLabel, QVBoxLayout, QFileDialog
@@ -17,16 +15,10 @@ from qtpy.QtWidgets import QHBoxLayout, QPushButton, QWidget, QLabel, QVBoxLayou
 from napari.utils.notifications import show_info
 
 import os
-import pandas as pd
-#imports for file selection
-# import tkinter as tk
-# from tkinter import filedialog
-
 from napari import Viewer
 from pathlib import Path
 
-from magicgui.widgets import Table
-from magicgui.widgets import Slider
+from magicgui.widgets import Table,Select,PushButton
 
 if TYPE_CHECKING:
     import napari
@@ -141,7 +133,6 @@ def example_magic_widget(img_layer: "napari.layers.Image"):
     pass
 
 
-
 """
 IMPROVED GUI VERSION
 """
@@ -163,9 +154,10 @@ def _init_classifier(widget):
             return list(dataframe.columns)
         except IOError:
             return [""]
-        
-    widget.feature_selection._default_choices = get_feature_choices
+
+    widget.drop_features._default_choices = get_feature_choices   
     widget.target_variable._default_choices = get_feature_choices
+    # widget.table._default_choices = None
 
     """
     # Updating the file path when it changes in GUI
@@ -176,29 +168,59 @@ def _init_classifier(widget):
     def update_df_columns():
         # ...reset_choices() calls the "get_feature_choices" function above
         # to keep them updated with the current dataframe
-        widget.feature_selection.reset_choices()
+
+        widget.drop_features.reset_choices()
         widget.target_variable.reset_choices()
         show_info(f"Selected Path: {widget.file_path.value}")
-    
+
+        #reading the contents
+        df = pd.read_csv(widget.file_path.value)
+
+        # Can we only show head of dataframe ?
+        #df_head = df.head(10)
+
+        df_to_list = df.to_dict(orient='list')
+        widget.table.value = df_to_list
+
     """
     # Updating the target_varible value when it changes in GUI
     """
     @widget.target_variable.changed.connect
     def update_target_variable():
         target_variable = widget.target_variable.value
-        
 
+    """
+    Getting the values of selected drop features
+    """
+    @widget.drop_features.changed.connect
+    def get_selected_drop_features():
+        drop_features = widget.drop_features.value
+        return drop_features
+
+    """
+    Drop the selected features and update the dataframe table
+    """
+    @widget.drop.changed.connect
+    def drop_features():
+        features_to_drop = get_selected_drop_features()
+        show_info(f"Droppping features{features_to_drop}")
+        df = pd.read_csv(widget.file_path.value)
+        widget.table.value = df.drop(features_to_drop,axis=1)
+    
 
 
 @magic_factory(
     file_path={"label": "File Path:", "filter": "*.csv"},
-    feature_selection={"choices": [""],"allow_multiple": True,"label": "Input Features:",},
+    table = {"widget_type": Table, "label": "Data frame", "value":None},
     target_variable= {"choices":[""], "label": "Target Variable"},
+    drop_features = {"widget_type":Select, "label":"Select Features to Drop", "choices":[""], "allow_multiple":True},
+    drop ={"widget_type":PushButton,"text":" Drop Features", "value":False},
     widget_init=_init_classifier,call_button="Print GUI selected parameters",)
-def initialize_classifier(viewer: Viewer,file_path: Path,feature_selection=[""], target_variable = "",):
+def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,target_variable = "",drop_features=[""],drop=PushButton(value=False),):
     print('----Current selected parameter varible----')
     print("File Path:" ,file_path)
     print("Target variable: ", target_variable)
+    print("Features to Drop: ", drop_features)
 
 
 
@@ -211,20 +233,38 @@ def initialize_classifier(viewer: Viewer,file_path: Path,feature_selection=[""],
 # d = temp_data.to_dict(orient='list')
 
 
-dict_of_lists = {"col_1": [1, 4], "col_2": [2, 5], "col_3": [3, 6]}
+# dict_of_lists = {"col_1": [1, 4], "col_2": [2, 5], "col_3": [3, 6]}
 
 
-def _init_table_view(widget):
-    print("Select Table View widget")
+# def _init_table_view(widget):
+#     # print("Select Table View widget")
 
-    widget.table.value = dict_of_lists
-    print(widget.table.row_headers)
-    print(widget.table.column_headers)
-    widget.table.column_headers = ("a","b","c")
-    print(widget.table.column_headers)
+#     # widget.table.value = None
+#     # print(widget.table.row_headers)
+#     # print(widget.table.column_headers)
+#     # widget.table.column_headers = ("a","b","c")
+#     # print(widget.table.column_headers)
+
+#     #for drop_featurs
+#     print("print selected option")
+#     print(widget.my_test.value)
+
+#     @widget.my_test.changed.connect
+#     def update():
+#         print(widget.my_test.value)
 
 
-@magic_factory(table = {"widget_type": Table, "value":None,"label":"Dataframe"}, widget_init=_init_table_view,)
-def table_view(table):
-    print(table)
-    pass
+# @magic_factory(table = {"widget_type": Table, "value":None,"label":"Dataframe"}, widget_init=_init_table_view,)
+# def table_view(table):
+#     print(table)
+#     pass
+
+# options = ['f1','f2','f3']
+# @magic_factory(my_test = {"widget_type":Select, "label":'Drop Features', "choices":[""],"allow_multiple":True}, widget_init=_init_table_view)
+# def table_view(my_test):
+#     pass
+
+# @magic_factory(push = {"widget_type":PushButton,"text":"Please click",}, call_button=False)
+# def table_view(push):
+#     pass
+
