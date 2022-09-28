@@ -4,7 +4,7 @@ It implements the Widget specification.
 see: https://napari.org/stable/plugins/guides.html?#widgets
 Replace code below according to your needs.
 """
-
+import os
 import warnings
 import numpy as np
 import pandas as pd
@@ -12,13 +12,14 @@ from typing import TYPE_CHECKING
 from magicgui import magic_factory
 from qtpy.QtWidgets import QHBoxLayout, QPushButton, QWidget, QLabel, QVBoxLayout, QFileDialog
 
-from napari.utils.notifications import show_info
+from napari.utils.notifications import show_info, show_error, show_console_notification
 
 import os
 from napari import Viewer
 from pathlib import Path
 
-from magicgui.widgets import Table,Select,PushButton
+from magicgui.widgets import Table,Select,PushButton,FileEdit
+import csv
 
 if TYPE_CHECKING:
     import napari
@@ -207,6 +208,33 @@ def _init_classifier(widget):
         df = pd.read_csv(widget.file_path.value)
         widget.table.value = df.drop(features_to_drop,axis=1)
 
+    """
+    Handling when output file path is changing
+    """
+    @widget.output_file.changed.connect
+    def update_output_filepath():
+        show_info(f"Selected output file path is: {widget.output_file.value}")
+        return widget.output_file.value
+    
+    """
+    Handling when save button is pressed
+    """
+
+    @widget.save.changed.connect
+    def update_save():
+        file_path = update_output_filepath()
+        show_info(f"Saving File {os.path.basename(file_path)}")
+
+        dummy_df = pd.DataFrame({'a':["Sanjeev", "sanju"],
+                     'b':[100,200],
+                     'c':['a','b']})
+        dummy_df.to_csv(file_path, index=False)
+
+    @widget.run_ga.changed.connect
+    def run_ga():
+        final_data = pd.read_csv(widget.output_file.value)
+        print(final_data)
+
 
 @magic_factory(
     file_path={"label": "File Path:", "filter": "*.csv"},
@@ -214,12 +242,31 @@ def _init_classifier(widget):
     target_variable= {"choices":[""], "label": "Target Variable"},
     drop_features = {"widget_type":Select, "label":"Select Features to Drop", "choices":[""], "allow_multiple":True},
     drop ={"widget_type":PushButton,"text":" Drop Features", "value":False},
-    widget_init=_init_classifier,call_button="Print GUI selected parameters (Temporary)",)
-def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,target_variable = "",drop_features=[""],drop=PushButton(value=False),):
+    widget_init=_init_classifier,
+    run_ga = {"widget_type":PushButton, "text": "Run GA Feature Selection", "value":False},
+    call_button=False,
+    output_file= {"widget_type":FileEdit, "mode":'w', "filter":"*.csv"},
+    save= {"widget_type":PushButton, "text": "Click to Save File", "value":False})
+def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,target_variable = "",drop_features=[""],drop=PushButton(value=False),run_ga=PushButton(value=False),output_file=Path.home(), save=PushButton(value=False)):
     print('----Current selected parameter varible----')
     print("File Path:" ,file_path)
     print("Target variable: ", target_variable)
     print("Features to Drop: ", drop_features)
+
+
+# @magic_factory(filename={"widget_type":FileEdit,"mode":'w', "filter":"*.csv"},
+#                save = {"widget_type":PushButton,"text":"Save File","value":False},
+#                 widget_init=_init_table_view)
+# def table_view(filename=Path.home(), save=PushButton(value=False)):
+#     file_path = filename
+#     print(pd.read_csv(file_path))
+#     # with open(filename) as f:
+#     #     lines = f.readlines()
+#     #     print(lines)
+
+
+
+
 
 
 
@@ -229,10 +276,10 @@ def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,t
 #                      'b':[100,200],
 #                      'c':['a','b']})
 
-# d = temp_data.to_dict(orient='list')
+# # d = temp_data.to_dict(orient='list')
 
 
-# dict_of_lists = {"col_1": [1, 4], "col_2": [2, 5], "col_3": [3, 6]}
+# # dict_of_lists = {"col_1": [1, 4], "col_2": [2, 5], "col_3": [3, 6]}
 
 
 # def _init_table_view(widget):
@@ -256,6 +303,47 @@ def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,t
     # def print_something():
     #     print("Pressing push button")
 
+    # print("Store the content of the files")
+    
+    # @widget.filename.changed.connect
+    # def fchange():
+    #     """
+    #     will give me the path of the file that user has created when windows pop up
+    #     """
+
+    #     show_info(f"Selected file path: {widget.filename.value}")
+        # basename = os.path.basename(widget.filename.value)
+        # print(basename)
+        # print(type(basename))
+        # try:
+        #     if (str(widget.filename.value).endswith(".csv")):
+        #         return widget.filename.value
+        #     else:
+        # except IOError:
+        #     print("something wrong")    
+
+        # if not str(widget.filename.value).endswith(".csv"):
+
+        #     show_error("Selected file name does not end with .csv")
+        # return widget.filename.value
+
+
+    
+    # @widget.save.changed.connect
+    # def save_file():
+    #     print("Saving File")
+    #     file_path = fchange()
+    #     df = pd.DataFrame({'a':["Sanjeev", "sanju"],
+    #                  'b':[100,200],
+    #                  'c':['a','b']})
+        
+    #     df.to_csv(file_path, index=False)
+        # csv_content = pd.DataFrame.to_csv(df, index=False)
+
+        # with open(file_path, 'w') as f:
+        #     writer = csv.writer(f)
+        #     writer.writerow(csv_content)
+
 
 # @magic_factory(table = {"widget_type": Table, "value":None,"label":"Dataframe"}, widget_init=_init_table_view,)
 # def table_view(table):
@@ -271,3 +359,12 @@ def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,t
 # def table_view(push):
 #     pass
 
+# @magic_factory(filename={"widget_type":FileEdit,"mode":'w', "filter":"*.csv"},
+#                save = {"widget_type":PushButton,"text":"Save File","value":False},
+#                 widget_init=_init_table_view)
+# def table_view(filename=Path.home(), save=PushButton(value=False)):
+#     file_path = filename
+#     print(pd.read_csv(file_path))
+#     # with open(filename) as f:
+#     #     lines = f.readlines()
+#     #     print(lines)
