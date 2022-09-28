@@ -23,11 +23,14 @@ https://napari.org/stable/plugins/index.html
 
 ## Installation
 
-You can install `napari-features-selection` via [pip]:
+This plugin is not available via pip yet (currently in development phase). Still want to see the funtionality of plugin, pip install it using:
 
-    pip install napari-features-selection
-
-
+    
+    git clone git@github.com:kumar-sanjeeev/napari-features-selection.git
+    cd napari-features-selection
+    pip install .
+    
+    
 
 To install latest development version :
 
