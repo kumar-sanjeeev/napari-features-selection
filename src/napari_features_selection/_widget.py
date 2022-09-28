@@ -157,7 +157,7 @@ def _init_classifier(widget):
 
     widget.drop_features._default_choices = get_feature_choices   
     widget.target_variable._default_choices = get_feature_choices
-    # widget.table._default_choices = None
+    widget.table._default_choices = None
 
     """
     # Updating the file path when it changes in GUI
@@ -206,16 +206,15 @@ def _init_classifier(widget):
         show_info(f"Droppping features{features_to_drop}")
         df = pd.read_csv(widget.file_path.value)
         widget.table.value = df.drop(features_to_drop,axis=1)
-    
 
 
 @magic_factory(
     file_path={"label": "File Path:", "filter": "*.csv"},
-    table = {"widget_type": Table, "label": "Data frame", "value":None},
+    table = {"widget_type": Table, "label": "Data frame", "value":None,"enabled":False},
     target_variable= {"choices":[""], "label": "Target Variable"},
     drop_features = {"widget_type":Select, "label":"Select Features to Drop", "choices":[""], "allow_multiple":True},
     drop ={"widget_type":PushButton,"text":" Drop Features", "value":False},
-    widget_init=_init_classifier,call_button="Print GUI selected parameters",)
+    widget_init=_init_classifier,call_button="Print GUI selected parameters (Temporary)",)
 def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,target_variable = "",drop_features=[""],drop=PushButton(value=False),):
     print('----Current selected parameter varible----')
     print("File Path:" ,file_path)
@@ -237,21 +236,25 @@ def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,t
 
 
 # def _init_table_view(widget):
-#     # print("Select Table View widget")
+    # print("Select Table View widget")
 
-#     # widget.table.value = None
-#     # print(widget.table.row_headers)
-#     # print(widget.table.column_headers)
-#     # widget.table.column_headers = ("a","b","c")
-#     # print(widget.table.column_headers)
+    # widget.table.value = None
+    # print(widget.table.row_headers)
+    # print(widget.table.column_headers)
+    # widget.table.column_headers = ("a","b","c")
+    # print(widget.table.column_headers)
 
-#     #for drop_featurs
-#     print("print selected option")
-#     print(widget.my_test.value)
+    #for drop_featurs
+    # print("print selected option")
+    # print(widget.my_test.value)
 
-#     @widget.my_test.changed.connect
-#     def update():
-#         print(widget.my_test.value)
+    # @widget.my_test.changed.connect
+    # def update():
+    #     print(widget.my_test.value)
+
+    # @widget.push.changed.connect
+    # def print_something():
+    #     print("Pressing push button")
 
 
 # @magic_factory(table = {"widget_type": Table, "value":None,"label":"Dataframe"}, widget_init=_init_table_view,)
@@ -264,7 +267,7 @@ def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,t
 # def table_view(my_test):
 #     pass
 
-# @magic_factory(push = {"widget_type":PushButton,"text":"Please click",}, call_button=False)
+# @magic_factory(push = {"widget_type":PushButton,"text":"Please click","enabled":False}, call_button=False,widget_init=_init_table_view)
 # def table_view(push):
 #     pass
 
