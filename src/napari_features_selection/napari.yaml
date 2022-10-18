@@ -18,18 +18,18 @@ contributions:
     #   python_name: napari_features_selection._sample_data:make_sample_data
     #   title: Load sample data from Features Selection
 
-    - id: napari-features-selection.make_qwidget
-      python_name: napari_features_selection._widget:FeaturesSelection
-      title: Features selection Widget
+    # - id: napari-features-selection.make_qwidget
+    #   python_name: napari_features_selection._widget:FeaturesSelection
+    #   title: Features selection Widget
 
-    - id: napari-features-selection.better
+    - id: napari-features-selection.gui_GA
       python_name: napari_features_selection._widget:initialize_classifier
-      title: Copy Paste
+      title: Genetic Algorithm
 
     # sep 26
-    - id: napari-features-selection.make_qwidget2
-      python_name: napari_features_selection._widget:SaveFile
-      title: Save File
+    # - id: napari-features-selection.make_qwidget2
+    #   python_name: napari_features_selection._widget:SaveFile
+    #   title: Save File
 
     # sep 27
     # - id: napari-features-selection.make_qwidget3
@@ -55,19 +55,19 @@ contributions:
   #     display_name: Features Selection
   #     key: unique_id.1
   widgets:
-    - command: napari-features-selection.make_qwidget
-      display_name: Features Selections GUI V1
+    # - command: napari-features-selection.make_qwidget
+    #   display_name: Features Selections GUI V1
     # - command: napari-features-selection.just_checking
     #   display_name: Just Checking
     # - command: napari-features-selection.something_new
     #   display_name: Something New
     # - command: napari-features-selection.example_case
     #   display_name: Example Case
-    - command: napari-features-selection.better
-      display_name: Feature Selection GUI V2
+    - command: napari-features-selection.gui_GA
+      display_name: Feature Selection GA
 
-    - command: napari-features-selection.make_qwidget2
-      display_name: Features Selections GUI V3
+    # - command: napari-features-selection.make_qwidget2
+    #   display_name: Features Selections GUI V3
 
 
     # - command: napari-features-selection.make_qwidget3
