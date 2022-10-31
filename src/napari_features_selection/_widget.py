@@ -4,8 +4,11 @@ It implements the Widget specification.
 see: https://napari.org/stable/plugins/guides.html?#widgets
 Replace code below according to your needs.
 """
+
 import os
+from random import random
 import warnings
+from matplotlib.dates import datestr2num
 import numpy as np
 import pandas as pd
 from typing import TYPE_CHECKING
@@ -20,6 +23,19 @@ from pathlib import Path
 
 from magicgui.widgets import Table,Select,PushButton, Slider, Label,FileEdit,FloatSlider, RangeEdit
 import csv
+
+from sklearn import preprocessing
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn_genetic import GAFeatureSelectionCV
+from sklearn_genetic.callbacks import ProgressBar
+import matplotlib.pyplot as plt
+
+
+# import GA file
+# from ._reader import napari_get_reader
+from ._ga_feature_selection import FeatureSelectionGA
 
 if TYPE_CHECKING:
     import napari
@@ -257,6 +273,12 @@ def _init_classifier(widget):
         
         # final_data = pd.read_csv(widget.file_path.value)
         # read the input file and selected parameters to run the GA on features
+        out_file_path = widget.output_file.value
+        file_name, file_ext = os.path.splitext(out_file_path)
+        assert file_ext==".csv", f"Please first select the output file location: {file_ext}" 
+        # show_info(f"Selected output file path is: {widget.output_file.value}")
+        # show_info(f"Saving File {os.path.basename(file_path)}") 
+
         in_file_path = widget.file_path.value
 
         _, file_ext = os.path.splitext(in_file_path)
@@ -264,11 +286,93 @@ def _init_classifier(widget):
         assert file_ext == ".csv", "Nothing to run, first select the input csv file"
 
         print("Selected csv file path: ", in_file_path)
-    
-    """
-    Updating the generations value when changed by slider
-    """
-    @widget.generations.changed.connect
+
+        # Get input parameters required for GA class
+        Dataset = pd.read_csv(in_file_path)
+        Target = widget.target_variable.value
+        Drop_features = widget.drop_features.value
+        Crossover_prob = widget.crossover_prob.value
+        Population_size = widget.population_size.value
+        Generation = widget.generations.value
+        Out_dir = widget.output_file.value
+        Max_features = None
+        
+        print("Before Dropping Size is : ", Dataset.shape)
+
+        obj = FeatureSelectionGA(file_path=in_file_path, target=Target, drop_features=Drop_features)
+        clf, X_train, X_test, y_train, y_test, acc = obj.process_data()
+
+        obj.run_GA(generations= Generation, population_size = Population_size, crossover_probability= Crossover_prob, max_features=None, outdir= Out_dir, classifier=clf,
+                  X_train_trans= X_train, X_test_trans= X_test, y_train = y_train, y_test= y_test)
+        show_info("GA feature selection completed")
+        
+        # # process data
+        # Label = Dataset[Target]
+        # print(Label)
+        # le = preprocessing.LabelEncoder()
+        # y  = le.fit_transform(Label)
+
+        # # Drop features
+        # if Drop_features is not None:
+        #     X = Dataset.drop(Drop_features, axis=1)
+        #     X = X.drop(columns=[Target])
+        # else:
+        #     X = Dataset.drop(columns=[Target])
+
+
+        # ## Transform Data
+        # quantile_transformer = preprocessing.QuantileTransformer(random_state=0)
+        # X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.33, random_state=0)
+
+        # X_train_trans = quantile_transformer.fit_transform(X_train)
+        # X_test_trans = quantile_transformer.transform(X_test)
+
+        # """Convert back to dataframes"""
+        # X_train_trans = pd.DataFrame(X_train_trans, columns=X.columns)
+        # X_test_trans = pd.DataFrame(X_test_trans, columns=X.columns)
+
+        # """without GA feature selection"""
+        # clf = GradientBoostingClassifier(n_estimators=10)
+        # clf.fit(X_train_trans, y_train)
+        # y_predict = clf.predict(X_test_trans)
+        # accuracy_no_gs = accuracy_score(y_test, y_predict)
+
+        # # print("Accuracy is," "{:.2f}".format(accuracy_no_gs))
+
+        # """run GA algorithm"""
+        # ga_estimator = GAFeatureSelectionCV(estimator=clf, 
+        #                                     cv=5,
+        #                                     scoring='accuracy',
+        #                                     population_size=Population_size,
+        #                                     generations=Generation,
+        #                                     n_jobs=-1,
+        #                                     crossover_probability=Crossover_prob,
+        #                                     mutation_probability=0.05,
+        #                                     verbose=True,
+        #                                     max_features=Max_features,
+        #                                     keep_top_k=3,
+        #                                     elitism=True)
+
+        # callback = ProgressBar()
+        # ga_estimator.fit(X_train_trans, y_train, callbacks=callback)
+        # features = ga_estimator.best_features_
+        # y_predict_ga = ga_estimator.predict(X_test_trans.iloc[:,features])
+        # accuracy = accuracy_score(y_test, y_predict_ga)
+        # print("Accuracy with GA: ", accuracy)
+        # print(ga_estimator.best_features_)
+
+        # # plt.figure()
+        # # plot = plot
+
+        # selected_features = list(X_test_trans.iloc[:, features].columns)
+        # print(selected_features)
+        # # cv_results = ga_estimator.cv_results_
+
+        # result_df = Dataset.loc[:,selected_features]
+        # result_df.to_csv(Out_dir)
+        # print(result_df)
+
+
     def update_generations():
         generations = widget.generations.value
 
@@ -295,15 +399,16 @@ def _init_classifier(widget):
     drop_features = {"widget_type":Select, "label":"Select Features to Drop", "choices":[""], "allow_multiple":True},
     drop ={"widget_type":PushButton,"text":" Drop Features", "value":False},
     widget_init=_init_classifier,
+    output_file= {"widget_type":FileEdit, "mode":'w', "filter":"*.csv"},
     label= {"widget_type":Label,"label":" HyperParameters for Genertic Algorithm","value":""},
     generations ={"widget_type":Slider, "label":"Number of Generations","max":20,"value":5},
     population_size={"widget_type":Slider, "label":"Population Size","max":100,"value":10},
     crossover_prob ={"widget_type":FloatSlider, "label":"Crossover Probability","max":1,"value":0.1},
     run_ga = {"widget_type":PushButton, "text": "Run GA Feature Selection", "value":False},
     call_button=False,
-    output_file= {"widget_type":FileEdit, "mode":'w', "filter":"*.csv"},
+    # output_file= {"widget_type":FileEdit, "mode":'w', "filter":"*.csv"},
 )
-def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,target_variable = "",drop_features=[""],drop=PushButton(value=False),label=Label,generations=Slider(value=5),population_size=Slider(value=10),crossover_prob=Slider(value=0.1),run_ga=PushButton(value=False),output_file=Path.home()):
+def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,target_variable = "",drop_features=[""],drop=PushButton(value=False),output_file=Path.home(),label=Label,generations=Slider(value=5),population_size=Slider(value=10),crossover_prob=Slider(value=0.1),run_ga=PushButton(value=False)):
     print('----Current selected parameter varible----')
     print("File Path:" ,file_path)
     print("Target variable: ", target_variable)
