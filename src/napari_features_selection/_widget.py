@@ -1,8 +1,5 @@
 """
-This module is an example of a barebones QWidget plugin for napari
-It implements the Widget specification.
-see: https://napari.org/stable/plugins/guides.html?#widgets
-Replace code below according to your needs.
+This module is written for creation of GUI for features selection plugin in napari
 """
 
 import os
@@ -12,36 +9,31 @@ import numpy as np
 import pandas as pd
 from typing import TYPE_CHECKING
 from magicgui import magic_factory
-
 from napari.utils.notifications import show_info
-
-import os
 from napari import Viewer
 from pathlib import Path
-
 from magicgui.widgets import Table,Select,PushButton, Slider, Label,FileEdit,FloatSlider
-
-
 from ._ga_feature_selection import FeatureSelectionGA
 
 if TYPE_CHECKING:
     import napari
 
-"""
-IMPROVED GUI VERSION
-"""
-def _init_classifier(widget):
-    """
-    Classifier Initialization Widget initialization
-    Parameters
-    ----------
-    widget: napari widget
-    """
-    print("User Selected the GUI version 2.0")
 
+
+
+def _init_classifier(widget):
+    """widget initialization function
+    
+    Args:
+        widget (napari widget) : object of napari widget class
+    """
+    show_info(" Feature Selection plugin initialized in Napari")
     def get_feature_choices(*args):
         """
-        Function loading the column names of the widget dataframe
+        Loading the column names of the input dataframe
+
+        Args:
+            *args: variable length argument list
         """
         try:
             dataframe = pd.read_csv(widget.file_path.value)
@@ -51,82 +43,86 @@ def _init_classifier(widget):
 
     widget.drop_features._default_choices = get_feature_choices   
     widget.target_variable._default_choices = get_feature_choices
-    widget.table._default_choices = None
+    widget.table.value = None    
 
-    """
-    # Updating the file path when it changes in GUI
-    # Updating the deafult value of feature_selection
-    # Updating the deafult value of the target_variable
-    """
+    @widget.reset.changed.connect
+    def reset_arguments():
+        show_info("Resetting the arguments to default values")
+        widget.crossover_prob.value = 0.1
+        widget.population_size.value = 10
+        widget.generations.value = 5
+        widget.output_file.value = ""
+        widget.file_path.value = ""
+        widget.drop_features.choices = [""]
+        widget.target_variable.choices = [""]
+
+ 
     @widget.file_path.changed.connect
     def update_df_columns():
+        """ updating gui widgets parameters when changing input csv file
+        
+        Args:
+            None
+        """
+        # input file extension check
+        widget.table.value = None
+        file_name, file_extension = os.path.splitext(widget.file_path.value)
+        assert file_extension==".csv", "Either no file is selected or selected file type is not csv"
+
         # ...reset_choices() calls the "get_feature_choices" function above
         # to keep them updated with the current dataframe
-
+        show_info(f"Selected Path: {widget.file_path.value}")
         widget.drop_features.reset_choices()
         widget.target_variable.reset_choices()
-        show_info(f"Selected Path: {widget.file_path.value}")
-
-        # check whether selected file is csv, if not raise error
-        file_name, file_extension = os.path.splitext(widget.file_path.value)
-        assert file_extension==".csv", "Selected file type is not csv"
-
-        #reading the contents
+        
+        # reading and updating the dataframe widget in GUI
         df = pd.read_csv(widget.file_path.value)
-
         df_head = df.head(20)
-
         df_to_list = df_head.to_dict(orient='list')
         widget.table.value = df_to_list
 
-    """
-    # Updating the target_varible value when it changes in GUI
-    """
+
+    
     @widget.target_variable.changed.connect
     def update_target_variable():
+        """Updating the target_varible value when it changes in GUI"""
         target_variable = widget.target_variable.value
+        t = target_variable
 
-    """
-    Getting the values of selected drop features
-    """
+  
     @widget.drop_features.changed.connect
     def get_selected_drop_features():
+        """ getting names of the features selected to drop from gui"""
+        print("calling drop_features")
         drop_features = widget.drop_features.value
+        dp = drop_features
         return drop_features
 
-    """
-    Drop the selected features and update the dataframe table
-    """
+   
     @widget.drop.changed.connect
     def drop_features():
+        """dropping selected features from gui"""
         features_to_drop = get_selected_drop_features()
         show_info(f"Droppping features{features_to_drop}")
         df = pd.read_csv(widget.file_path.value)
         widget.table.value = df.drop(features_to_drop,axis=1)
 
-    """
-    Handling when output file path is changing
-    """
+        '''Also remove features from available options of the target variable'''
+        widget.target_variable.choices = set(widget.drop_features.choices) - set(features_to_drop)
+
+    
     @widget.output_file.changed.connect
     def update_output_filepath():
-         # check the give file name extension is .csv, if yes, then only save
+        """updating the output file location"""
         file_path = widget.output_file.value
-        file_name, file_ext = os.path.splitext(file_path)
+        _, file_ext = os.path.splitext(file_path)
         assert file_ext==".csv", f"Wrong file extension, acceptable extension is .csv, but user provided: {file_ext}" 
-        # show_info(f"Selected output file path is: {widget.output_file.value}")
-        show_info(f"Saving File {os.path.basename(file_path)}")    
+        show_info(f"Selected File Saving location: {os.path.basename(file_path)}")    
 
-        dummy_df = pd.DataFrame({'a':["Sanjeev", "sanju"],
-                     'b':[100,200],
-                     'c':['a','b']})
-        dummy_df.to_csv(file_path, index=False)  
-        show_info(f"Saving File {os.path.basename(file_path)}")
-        # return widget.output_file.value
     
 
     @widget.run_ga.changed.connect
     def run_ga():
-        
         # final_data = pd.read_csv(widget.file_path.value)
         # read the input file and selected parameters to run the GA on features
         out_file_path = widget.output_file.value
@@ -147,6 +143,8 @@ def _init_classifier(widget):
         Dataset = pd.read_csv(in_file_path)
         Target = widget.target_variable.value
         Drop_features = widget.drop_features.value
+        print(Target)
+        print(Drop_features)
         Crossover_prob = widget.crossover_prob.value
         Population_size = widget.population_size.value
         Generation = widget.generations.value
@@ -158,8 +156,11 @@ def _init_classifier(widget):
         obj = FeatureSelectionGA(file_path=in_file_path, target=Target, drop_features=Drop_features)
         clf, X_train, X_test, y_train, y_test, acc = obj.process_data()
 
-        obj.run_GA(generations= Generation, population_size = Population_size, crossover_probability= Crossover_prob, max_features=None, outdir= Out_dir, classifier=clf,
-                  X_train_trans= X_train, X_test_trans= X_test, y_train = y_train, y_test= y_test)
+        obj.run_GA(generations= Generation, population_size = Population_size, 
+                   crossover_probability= Crossover_prob, max_features=None, outdir= Out_dir, 
+                   classifier=clf,X_train_trans= X_train, X_test_trans= X_test, 
+                   y_train = y_train, y_test= y_test)
+
         show_info("GA feature selection completed")
         
 
@@ -180,14 +181,14 @@ def _init_classifier(widget):
     def update_crossover_prob():
         crossover_prob = widget.crossover_prob.value
     
-# save= {"widget_type":PushButton, "text": "Click to Save File", "value":False}
-# , save=PushButton(value=False)
+
 @magic_factory(
-    file_path={"label": "File Path:", "filter": "*.csv"},
-    table = {"widget_type": Table, "label": "Data frame", "value":None,"enabled":True},
-    target_variable= {"choices":[""], "label": "Target Variable"},
+    reset = {"widget_type":PushButton, "text":" Reset Plugin Arguments", "value":False},
+    file_path={"widget_type":FileEdit,"mode":'r',"label": "File Path:", "filter": "*.csv"},
+    table = {"widget_type":Table, "label": "Data frame", "value":None,"enabled":True},
     drop_features = {"widget_type":Select, "label":"Select Features to Drop", "choices":[""], "allow_multiple":True},
     drop ={"widget_type":PushButton,"text":" Drop Features", "value":False},
+    target_variable= {"label": "Target Variable", "choices":[""]},
     widget_init=_init_classifier,
     output_file= {"widget_type":FileEdit, "mode":'w', "filter":"*.csv"},
     label= {"widget_type":Label,"label":" HyperParameters for Genertic Algorithm","value":""},
@@ -197,7 +198,20 @@ def _init_classifier(widget):
     run_ga = {"widget_type":PushButton, "text": "Run GA Feature Selection", "value":False},
     call_button=False,
 )
-def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,target_variable = "",drop_features=[""],drop=PushButton(value=False),output_file=Path.home(),label=Label,generations=Slider(value=5),population_size=Slider(value=10),crossover_prob=Slider(value=0.1),run_ga=PushButton(value=False)):
+def initialize_classifier(viewer: Viewer,
+                          reset = PushButton(value=False),
+                          file_path = Path.home(),
+                          table = Table,
+                          drop_features=[""],
+                          drop=PushButton(value=False),
+                          target_variable = "",
+                          output_file=Path.home(),
+                          label=Label,
+                          generations=Slider(value=5),
+                          population_size=Slider(value=10),
+                          crossover_prob=Slider(value=0.1),
+                          run_ga=PushButton(value=False)):
+
     print('----Current selected parameter varible----')
     print("File Path:" ,file_path)
     print("Target variable: ", target_variable)
@@ -207,5 +221,3 @@ def initialize_classifier(viewer: Viewer,file_path = Path.home(),table = Table,t
     print("cross_over Prob", crossover_prob)
 
     print("reading data from output csv file: ", print(pd.read_csv(output_file)))
-
-
