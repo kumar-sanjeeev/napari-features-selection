@@ -1,5 +1,5 @@
 """
-This module is written for creation of GUI for features selection plugin in napari
+This module is written for creation of GUI for features selection plugin in napari.
 """
 
 import os
@@ -25,7 +25,7 @@ def _init_widget(widget):
         widget (napari widget) : instance of ``FunctionGui``.
     """
     show_info(" Feature Selection plugin initialized in Napari")
-
+    
     def get_feature_choices(*args):
         """
         Loading the column names of the input dataframe.
@@ -36,22 +36,30 @@ def _init_widget(widget):
         try:
             dataframe = pd.read_csv(widget.file_path.value)
             return list(dataframe.columns)
+
         except IOError:
             return [""]
 
     widget.drop_features._default_choices = get_feature_choices   
     widget.target_variable._default_choices = get_feature_choices
-    widget.table.value = None    
+    widget.table.value = None 
+
 
     @widget.reset.changed.connect
     def reset_arguments():
-        """Resetting all GUI parameters"""
+        """Resetting all GUI parameters.
+        
+        Raises:
+            Assertion Error: If input file extension is not ``.csv`` or no input file is selected.
+            Assertion Error: If output file extension is not ``.csv``.
+        """
         show_info("Resetting the arguments to default values")
+        widget.flag.value = "True"
         widget.crossover_prob.value = 0.1
         widget.population_size.value = 10
         widget.generations.value = 5
-        widget.output_file.value = ""
-        widget.file_path.value = ""
+        widget.file_path.value = widget.user_dir.value
+        widget.output_file.value = Path.home()
         widget.drop_features.choices = [""]
         widget.target_variable.choices = [""]
 
@@ -61,13 +69,17 @@ def _init_widget(widget):
         """ Updating target varible, drop features and table widget in the gui, when input file path changes.
         
         Raises:
-            Assertion Error: Either input file is not selected or its extension is not ``.csv``.
+            Assertion Error: If input file extension is not ``.csv`` or no input file is selected.
 
         """
         widget.table.value = None
+        # to enable file selection from same dir after resetting parameters
+        if (bool(widget.flag.value) == False):
+            widget.user_dir.value, _ = os.path.split(widget.file_path.value)
+
         # input file extension check
-        file_name, file_extension = os.path.splitext(widget.file_path.value)
-        assert file_extension==".csv", "Either no file is selected or selected file type is not csv"
+        _, file_extension = os.path.splitext(widget.file_path.value)
+        assert file_extension==".csv", "Either input file is not selected or its extension is not .csv"
 
         # ...reset_choices() calls the "get_feature_choices" function above
         # to keep them updated with the current dataframe
@@ -80,7 +92,6 @@ def _init_widget(widget):
         df_head = df.head(20)
         df_to_list = df_head.to_dict(orient='list')
         widget.table.value = df_to_list
-
 
     
     @widget.target_variable.changed.connect
@@ -118,7 +129,7 @@ def _init_widget(widget):
         """
         file_path = widget.output_file.value
         _, file_ext = os.path.splitext(file_path)
-        assert file_ext==".csv", f"Wrong file extension, acceptable extension is .csv, but user provided: {file_ext}" 
+        assert file_ext==".csv", f"Wrong file extension, acceptable extension is .csv" 
         show_info(f"Selected File Saving location: {os.path.basename(file_path)}")    
 
 
@@ -179,35 +190,42 @@ def _init_widget(widget):
 """magic factory is decorator, which, will autogenerate a graphical user interface(GUI)"""  
 @magic_factory(
     reset = {"widget_type":PushButton, "text":" Reset Plugin Arguments", "value":False},
-    file_path={"widget_type":FileEdit,"mode":'r',"label": "File Path:", "filter": "*.csv"},
+    file_path = {"widget_type":FileEdit,"mode":'r',"label": "File Path:", "filter": "*.csv"},
     table = {"widget_type":Table, "label": "Data frame", "value":None,"enabled":True},
     drop_features = {"widget_type":Select, "label":"Select Features to Drop", "choices":[""], "allow_multiple":True},
-    drop ={"widget_type":PushButton,"text":" Drop Features", "value":False},
-    target_variable= {"label": "Target Variable", "choices":[""]},
-    widget_init=_init_widget,
-    output_file= {"widget_type":FileEdit, "mode":'w', "filter":"*.csv"},
-    label= {"widget_type":Label,"label":" HyperParameters for Genetic Algorithm","value":""},
-    generations ={"widget_type":Slider, "label":"Number of Generations","max":20,"value":5},
-    population_size={"widget_type":Slider, "label":"Population Size","max":100,"value":10},
-    crossover_prob ={"widget_type":FloatSlider, "label":"Crossover Probability","max":1,"value":0.1},
+    drop = {"widget_type":PushButton,"text":" Drop Features", "value":False},
+    target_variable = {"label": "Target Variable", "choices":[""]},
+    widget_init = _init_widget,
+    output_file = {"widget_type":FileEdit, "mode":'w', "filter":"*.csv"},
+    label = {"widget_type":Label,"label":" HyperParameters for Genetic Algorithm","value":""},
+    generations = {"widget_type":Slider, "label":"Number of Generations","max":20,"value":5},
+    population_size = {"widget_type":Slider, "label":"Population Size","max":100,"value":10},
+    crossover_prob = {"widget_type":FloatSlider, "label":"Crossover Probability","max":1,"value":0.1},
     run_ga = {"widget_type":PushButton, "text": "Run GA Feature Selection", "value":False},
-    call_button="[For Info] Print Selected GUI parameters",
+    call_button = "[For Info] Print Selected GUI parameters",
+    user_dir = {"widget_type":Label, "value":"/sanju/kumar", "visible":False},
+    flag = {"widget_type":Label, "value":"", "visible":False}
 )
 def initialize_widget(
     viewer: Viewer,
     reset = PushButton(value=False),
     file_path = Path.home(),
     table = Table,
-    drop_features=[""],
-    drop=PushButton(value=False),
+    drop_features = [""],
+    drop = PushButton(value=False),
     target_variable = "",
-    output_file=Path.home(),
-    label=Label,
-    generations=Slider(value=5),
-    population_size=Slider(value=10),
-    crossover_prob=Slider(value=0.1),
-    run_ga=PushButton(value=False)):
+    output_file = Path.home(),
+    label = Label,
+    generations = Slider(value=5),
+    population_size = Slider(value=10),
+    crossover_prob = Slider(value=0.1),
+    run_ga = PushButton(value=False),
+    user_dir = Label,
+    flag = PushButton(value=False)):
     """Initialization function used to initialize the widget"""
+    print("\n----------------------------------------")
+    print("Printing Selected Parameters in the GUI")
+    print("----------------------------------------")
     print("Input File path: ", file_path)
     print("Target variable: ", target_variable)
     print("Drop features: ", drop_features)
@@ -215,3 +233,4 @@ def initialize_widget(
     print("Population Size: ", population_size)
     print("Crossover Probability: ", crossover_prob)
     print("Output file path: ", output_file)
+    print("--------------------------------------")

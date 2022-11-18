@@ -1,12 +1,13 @@
 # importing libraries
 import pandas as pd
 import matplotlib.pyplot as plt
+
 # import seaborn as sns
 import logging
 import time
 import datetime
 import os
-
+ 
 # importing libraries for GA feature selection
 from sklearn import preprocessing
 from sklearn.svm import SVC
@@ -27,8 +28,7 @@ class FeatureSelectionGA:
         target (str): target variable for classification
         drop_features (list): list of features name to drop from input dataframe
     
-    Attributes:
-        
+    Attributes:  
     '''
 
     def __init__(self, file_path, target, drop_features):
@@ -38,13 +38,7 @@ class FeatureSelectionGA:
         self.drop_features = drop_features
 
     def process_data(self):
-        '''Processing of the input dataset
-        
-        Args:
-            None
-        
-
-        '''
+        '''Processing of the input dataset'''
         df= pd.read_csv(self.file_path)
 
         # encode the target variable with value btw 0 to no of classes
@@ -83,10 +77,7 @@ class FeatureSelectionGA:
                 crossover_probability, max_features, outdir, 
                 classifier, X_train_trans, X_test_trans,
                 y_train, y_test):
-                '''Implement the Genetic Algorithm for feature selection
-                
-                
-                '''
+                '''Implement the Genetic Algorithm for feature selection'''
                 ga_estimator = GAFeatureSelectionCV(estimator = classifier,
                 cv= 5,
                 scoring= 'accuracy',
@@ -114,6 +105,3 @@ class FeatureSelectionGA:
                 result_df = pd.read_csv(self.file_path).loc[:, final_selected_features]
                 print("Saving the file in path: ", outdir)
                 result_df.to_csv(outdir)
-                
-
-
