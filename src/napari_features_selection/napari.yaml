@@ -2,77 +2,9 @@ name: napari-features-selection
 display_name: Features Selection
 contributions:
   commands:
-    # - id: napari-features-selection.get_reader
-    #   python_name: napari_features_selection._reader:napari_get_reader
-    #   title: Open data with Features Selection
-
-    # - id: napari-features-selection.write_multiple
-    #   python_name: napari_features_selection._writer:write_multiple
-    #   title: Save multi-layer data with Features Selection
-
-    # - id: napari-features-selection.write_single_image
-    #   python_name: napari_features_selection._writer:write_single_image
-    #   title: Save image data with Features Selection
-
-    # - id: napari-features-selection.make_sample_data
-    #   python_name: napari_features_selection._sample_data:make_sample_data
-    #   title: Load sample data from Features Selection
-
-    # - id: napari-features-selection.make_qwidget
-    #   python_name: napari_features_selection._widget:FeaturesSelection
-    #   title: Features selection Widget
-
     - id: napari-features-selection.gui_GA
-      python_name: napari_features_selection._widget:initialize_classifier
+      python_name: napari_features_selection._widget:initialize_widget
       title: Genetic Algorithm
-
-    # sep 26
-    # - id: napari-features-selection.make_qwidget2
-    #   python_name: napari_features_selection._widget:SaveFile
-    #   title: Save File
-
-    # sep 27
-    # - id: napari-features-selection.make_qwidget3
-    #   python_name: napari_features_selection._widget:table_view
-    #   title: Table View
-
-    # - id: napari-features-selection.please
-    #   python_name: napari_features_selection._widget:main_algo
-    #   title: Please
-  # readers:
-  #   - command: napari-features-selection.get_reader
-  #     accepts_directories: false
-  #     filename_patterns: ['*.npy']
-  # writers:
-  #   - command: napari-features-selection.write_multiple
-  #     layer_types: ['image*','labels*']
-  #     filename_extensions: []
-  #   - command: napari-features-selection.write_single_image
-  #     layer_types: ['image']
-  #     filename_extensions: ['.npy']
-  # sample_data:
-  #   - command: napari-features-selection.make_sample_data
-  #     display_name: Features Selection
-  #     key: unique_id.1
   widgets:
-    # - command: napari-features-selection.make_qwidget
-    #   display_name: Features Selections GUI V1
-    # - command: napari-features-selection.just_checking
-    #   display_name: Just Checking
-    # - command: napari-features-selection.something_new
-    #   display_name: Something New
-    # - command: napari-features-selection.example_case
-    #   display_name: Example Case
     - command: napari-features-selection.gui_GA
       display_name: Feature Selection GA
-
-    # - command: napari-features-selection.make_qwidget2
-    #   display_name: Features Selections GUI V3
-
-
-    # - command: napari-features-selection.make_qwidget3
-    #   display_name: Table View
-
-
-    # - command: napari-features-selection.main_algo
-    #   display_name: Please
